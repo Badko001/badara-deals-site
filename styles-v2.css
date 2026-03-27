@@ -95,6 +95,51 @@ main.container {
   padding: 1.35rem 0 0.4rem;
 }
 
+.share-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px dashed rgba(20, 116, 111, 0.35);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.share-label {
+  font-weight: 800;
+  color: var(--accent-2);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.share-link {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+  background: rgba(20, 116, 111, 0.08);
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+}
+
+.share-chip {
+  text-decoration: none;
+  border: 0;
+  background: rgba(244, 96, 54, 0.12);
+  color: #2f3746;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border-radius: 999px;
+  padding: 0.35rem 0.62rem;
+  cursor: pointer;
+}
+
+.share-chip:hover {
+  background: rgba(244, 96, 54, 0.2);
+}
+
 .hero {
   position: relative;
   overflow: hidden;
@@ -258,6 +303,20 @@ main.container {
   color: var(--accent-2);
 }
 
+.floating-cta {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  text-decoration: none;
+  color: #fff;
+  background: linear-gradient(115deg, var(--accent-2) 0%, #1b998b 100%);
+  border-radius: 999px;
+  padding: 0.7rem 0.95rem;
+  font-weight: 800;
+  box-shadow: 0 12px 26px rgba(27, 153, 139, 0.36);
+}
+
 @keyframes rise {
   to {
     transform: translateY(0);
@@ -288,8 +347,24 @@ main.container {
     border-radius: 18px;
   }
 
+  .share-strip {
+    margin-top: 0.5rem;
+    padding: 0.65rem 0.65rem;
+  }
+
+  .share-link {
+    width: 100%;
+  }
+
   .card,
   .page {
     border-radius: 15px;
+  }
+
+  .floating-cta {
+    right: 10px;
+    bottom: 10px;
+    font-size: 0.82rem;
+    padding: 0.58rem 0.78rem;
   }
 }

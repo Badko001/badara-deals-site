@@ -15,6 +15,15 @@
         <a href="./contact.html">Contact</a>
       </nav>
     </header>
+    <section class="container share-strip">
+      <span class="share-label">Mon lien:</span>
+      <a class="share-link" href="https://badko001.github.io/badara-deals-site/" target="_blank" rel="noopener">https://badko001.github.io/badara-deals-site/</a>
+      <a class="share-chip" href="https://wa.me/?text=Bon%20Plan%20Amazon%3A%20https%3A%2F%2Fbadko001.github.io%2Fbadara-deals-site%2F" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="share-chip" href="https://t.me/share/url?url=https%3A%2F%2Fbadko001.github.io%2Fbadara-deals-site%2F&text=Bon%20Plan%20Amazon%3A%20https%3A%2F%2Fbadko001.github.io%2Fbadara-deals-site%2F" target="_blank" rel="noopener">Telegram</a>
+      <a class="share-chip" href="https://x.com/intent/tweet?text=Bon%20Plan%20Amazon%3A%20https%3A%2F%2Fbadko001.github.io%2Fbadara-deals-site%2F" target="_blank" rel="noopener">X</a>
+      <button class="share-chip" type="button" onclick="copyCurrentLink()">Copier le lien</button>
+    </section>
+
     <main class="container page">
       <h1>Contact</h1>
       <p>Pour toute question, ecris a:</p>
@@ -25,6 +34,23 @@
       <a href="./disclosure.html">Disclosure</a>
       <a href="./privacy.html">Confidentialite</a>
     </footer>
+  
+    <a class="floating-cta" href="https://badko001.github.io/badara-deals-site/" target="_blank" rel="noopener">Ouvrir mon lien</a>
+    <script>
+      function copyCurrentLink() {
+        var link = window.location.href.split("#")[0];
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(link);
+          return;
+        }
+        var input = document.createElement("input");
+        input.value = link;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+      }
+    </script>
   </body>
 </html>
 
