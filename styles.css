@@ -1,0 +1,94 @@
+:root {
+  --bg: #f4f7fb;
+  --ink: #122235;
+  --muted: #4e6278;
+  --accent: #ff5c2f;
+  --panel: #ffffff;
+  --line: #d8e2ee;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(160deg, #eef4ff 0%, var(--bg) 40%);
+  color: var(--ink);
+  font: 16px/1.6 "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+
+.container {
+  width: min(980px, 92vw);
+  margin: 0 auto;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.brand {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--muted);
+  margin-left: 1rem;
+  font-weight: 600;
+}
+
+.hero {
+  padding: 1.2rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.tag {
+  margin: 0 0 0.3rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.card,
+.page {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.btn {
+  display: inline-block;
+  text-decoration: none;
+  color: #fff;
+  background: var(--accent);
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  margin-top: 0.4rem;
+}
+
+.foot {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0 2rem;
+}
+
+.foot a {
+  color: var(--muted);
+  text-decoration: none;
+}
+

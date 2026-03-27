@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://Badko001.github.io/badara-deals-site/sitemap.xml
