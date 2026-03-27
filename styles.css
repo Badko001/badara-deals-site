@@ -317,6 +317,77 @@ main.container {
   box-shadow: 0 12px 26px rgba(27, 153, 139, 0.36);
 }
 
+.share-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 24, 34, 0.38);
+  padding: 1rem;
+}
+
+.share-popup.open {
+  display: flex;
+}
+
+.share-popup-card {
+  position: relative;
+  width: min(520px, 94vw);
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem 1rem 0.9rem;
+  box-shadow: var(--shadow);
+}
+
+.share-popup-close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.06);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.share-popup-kicker {
+  margin: 0 0 0.2rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.share-popup-card h3 {
+  margin: 0 0 0.45rem;
+  font-family: "Fraunces", Georgia, serif;
+  line-height: 1.2;
+}
+
+.share-popup-text {
+  margin: 0 0 0.7rem;
+}
+
+.share-popup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.share-popup-later {
+  margin-top: 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
 @keyframes rise {
   to {
     transform: translateY(0);
@@ -366,5 +437,10 @@ main.container {
     bottom: 10px;
     font-size: 0.82rem;
     padding: 0.58rem 0.78rem;
+  }
+
+  .share-popup-card {
+    border-radius: 14px;
+    padding: 0.85rem 0.75rem;
   }
 }

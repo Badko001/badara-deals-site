@@ -43,6 +43,21 @@
       <a href="./privacy.html">Confidentialite</a>
     </footer>
   
+    
+    <div class="share-popup" id="sharePopup" role="dialog" aria-modal="true" aria-labelledby="sharePopupTitle">
+      <div class="share-popup-card">
+        <button class="share-popup-close" type="button" onclick="closeSharePopup()" aria-label="Fermer">x</button>
+        <p class="share-popup-kicker">Partage rapide</p>
+        <h3 id="sharePopupTitle">Aide-nous a faire connaitre ce lien</h3>
+        <p class="share-popup-text">Tu peux partager en 1 clic et aider plus de monde a trouver les bons plans.</p>
+        <div class="share-popup-actions">
+          <a class="share-chip" href="https://wa.me/?text=Bon%20Plan%20Amazon%3A%20https%3A%2F%2Fbadko001.github.io%2Fbadara-deals-site%2F" target="_blank" rel="noopener">WhatsApp</a>
+          <a class="share-chip" href="https://t.me/share/url?url=https%3A%2F%2Fbadko001.github.io%2Fbadara-deals-site%2F&text=Bon%20Plan%20Amazon%3A%20https%3A%2F%2Fbadko001.github.io%2Fbadara-deals-site%2F" target="_blank" rel="noopener">Telegram</a>
+          <a class="share-chip" href="https://x.com/intent/tweet?text=Bon%20Plan%20Amazon%3A%20https%3A%2F%2Fbadko001.github.io%2Fbadara-deals-site%2F" target="_blank" rel="noopener">X</a>
+        </div>
+        <button class="share-popup-later" type="button" onclick="closeSharePopup()">Plus tard</button>
+      </div>
+    </div>
     <a class="floating-cta" href="https://badko001.github.io/badara-deals-site/" target="_blank" rel="noopener">Ouvrir mon lien</a>
     <script>
       function copyCurrentLink() {
@@ -58,6 +73,28 @@
         document.execCommand("copy");
         document.body.removeChild(input);
       }
+
+      function closeSharePopup() {
+        var popup = document.getElementById("sharePopup");
+        if (popup) {
+          popup.classList.remove("open");
+          try {
+            localStorage.setItem("bpa_popup_seen", "1");
+          } catch (e) {}
+        }
+      }
+
+      setTimeout(function() {
+        var popup = document.getElementById("sharePopup");
+        if (!popup) return;
+        var seen = false;
+        try {
+          seen = localStorage.getItem("bpa_popup_seen") === "1";
+        } catch (e) {}
+        if (!seen) {
+          popup.classList.add("open");
+        }
+      }, 10000);
     </script>
   </body>
 </html>
