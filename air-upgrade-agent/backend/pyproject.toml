@@ -1,0 +1,41 @@
+[project]
+name = "air-upgrade-agent"
+version = "0.1.0"
+description = "Personal assistant that watches a user's own booking for official, free Economy -> Business upgrade opportunities for 3 passengers."
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "browser: tests that launch a real (local) Chromium against the mock Air France page",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = [
+    "E501",   # line length is enforced by `ruff format`; long French strings are allowed
+    "UP046",  # keep typing.Generic for Observed[T] (explicit pydantic generic model)
+    "S101",   # assert is fine in tests
+    "RUF001", # French text contains typographic characters on purpose
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S108"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+packages = ["app"]
+
+[[tool.mypy.overrides]]
+module = ["openai.*"]
+ignore_missing_imports = true

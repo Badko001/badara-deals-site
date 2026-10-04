@@ -1,0 +1,31 @@
+# Secrets - never commit
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Runtime data (may contain booking metadata)
+data/*.db
+data/*.db-journal
+data/snapshots/*
+!data/snapshots/.gitkeep
+
+# Debug screenshots are sensitive data
+browser/screenshots/*
+!browser/screenshots/.gitkeep
+
+# Browser session material
+*storage_state*.json
+playwright/.auth/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo

@@ -1,0 +1,29 @@
+# Local development / demo. Default: MOCK AIR FRANCE + DRY_RUN.
+# Real Air France mode needs a VISIBLE browser for the manual login: run the
+# backend on your own machine instead of a container (see README.md).
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PROVIDER: ${PROVIDER:-mock}
+      DRY_RUN: ${DRY_RUN:-true}
+    volumes:
+      - agent-data:/srv/data
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  frontend:
+    build:
+      context: frontend
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:8080:80"
+
+volumes:
+  agent-data:
