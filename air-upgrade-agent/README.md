@@ -1,0 +1,76 @@
+# AIR UPGRADE AGENT
+
+Assistant personnel qui surveille **votre propre réservation** pour détecter une possibilité
+**réelle et officiellement proposée** de passer **3 passagers ensemble** de **Economy à Business**,
+par défaut à **0 € et 0 Miles**.
+
+> Le produit dit « J'ai trouvé une opportunité réelle », jamais « J'ai modifié le système Air France ».
+> Seule la compagnie peut confirmer qu'une réservation est passée en Business.
+
+## Ce que fait le système (et ce qu'il ne fait jamais)
+
+| Fait | Ne fait jamais |
+|---|---|
+| Lit la page officielle dans un navigateur isolé où **vous** vous connectez à la main | Demander, stocker ou taper votre mot de passe |
+| Décide de façon déterministe (le LLM explique, sans être l'autorité) | Contourner un CAPTCHA, une authentification, un paiement ou un système de Miles |
+| Exige **une seule offre officielle couvrant les 3 passagers** | Combiner des offres individuelles, deviner une donnée invisible |
+| Signale les offres payantes / en Miles, sans les exécuter | Appeler une API privée non documentée, réserver artificiellement des sièges |
+| N'agit qu'après **CONFIRMER**, relit la page, et vérifie ensuite le résultat chez la compagnie | Falsifier un PNR, un billet ou une carte d'embarquement |
+
+## Démarrage rapide (mode MOCK, aucune connexion à Air France)
+
+```bash
+# Backend (Python 3.12+)
+cd backend
+python3.12 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
+python -m playwright install chromium        # pour les tests navigateur / le mode réel
+cp ../.env.example ../.env                   # optionnel : valeurs par défaut sûres
+uvicorn app.main:app --reload --port 8000
+
+# Frontend
+cd ../frontend
+npm install
+npm run dev                                  # http://localhost:5173
+```
+
+Dans le dashboard : **Vérifier maintenant**, puis changer de scénario dans **MOCK AIR FRANCE**
+(16 scénarios : Economy seule, 2 sièges seulement, offre payante, offre Miles, check-in fermé,
+CAPTCHA, données non confirmées…).
+
+Avec Docker : `docker compose up --build` → http://localhost:8080 (mock + DRY_RUN).
+
+## Mode réel Air France (prudence)
+
+1. `PROVIDER=airfrance`, garder `DRY_RUN=true` au début, lancer le backend **sur votre machine**
+   (navigateur visible requis).
+2. Dashboard → **Ouvrir le navigateur** : une fenêtre Chromium isolée s'ouvre sur le site officiel.
+3. Vous vous connectez **vous-même** (et résolvez vous-même toute vérification anti-robot),
+   puis ouvrez la réservation.
+4. L'agent lit la page et surveille. Tout ce qu'il ne voit pas reste `null`.
+
+⚠️ Les sélecteurs du vrai site sont marqués **non vérifiés** (`verified=False`) : tant qu'ils ne
+sont pas validés sur une session réelle (procédure : `docs/AIR_FRANCE_WORKFLOW.md`), l'agent est
+en **lecture seule** et refuse de cliquer ; vous acceptez l'offre vous-même dans l'interface officielle.
+
+## Configuration
+
+Voir `.env.example`. Points clés : `DRY_RUN=true`, `CASH_LIMIT=0`, `MILES_LIMIT=0`
+(modifiables à chaud depuis le dashboard), `POLL_INTERVAL_SECONDS` borné par
+`MINIMUM_CHECK_INTERVAL` / `MAXIMUM_CHECK_INTERVAL`. Azure est optionnel.
+
+## Qualité
+
+```bash
+cd backend && pytest && ruff check . && ruff format --check . && mypy
+cd frontend && npm run typecheck && npm run lint && npm run build
+```
+
+## Documentation
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — couches, flux, extensibilité multi-compagnies
+- [docs/SECURITY.md](docs/SECURITY.md) — secrets, sessions, logs, screenshots, incidents
+- [docs/PRIVACY.md](docs/PRIVACY.md) — minimisation et redaction des données
+- [docs/TESTING.md](docs/TESTING.md) — scénarios A–F, mock, tests navigateur
+- [docs/AIR_FRANCE_WORKFLOW.md](docs/AIR_FRANCE_WORKFLOW.md) — parcours réel et validation des sélecteurs
+- [docs/DEPLOYMENT_AZURE.md](docs/DEPLOYMENT_AZURE.md) — Azure Container Apps / App Service / Foundry
