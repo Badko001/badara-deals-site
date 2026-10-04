@@ -1,0 +1,135 @@
+{
+  "_comment": "MOCK AIR FRANCE - fictitious data only. Each scenario = base page + overrides, in the raw form the browser would read.",
+  "base": {
+    "page_kind": "booking",
+    "booking_reference_text": "TEST123",
+    "flight_number_text": "AF 719",
+    "origin_text": "Dakar (DSS)",
+    "destination_text": "Paris Charles de Gaulle (CDG)",
+    "departure_text": "2026-10-05T23:55:00+00:00",
+    "aircraft_text": "Boeing 777-200ER",
+    "passengers_count_text": "3 passagers",
+    "cabin_text": "Economy",
+    "passenger_rows": [
+      {"name_text": "Awa TESTDIOP", "ticket_text": "0570000000001", "cabin_text": "Economy", "seat_text": "32A"},
+      {"name_text": "Moussa TESTFALL", "ticket_text": "0570000000002", "cabin_text": "Economy", "seat_text": "32B"},
+      {"name_text": "Fatou TESTSARR", "ticket_text": "0570000000003", "cabin_text": "Economy", "seat_text": "32C"}
+    ],
+    "business_availability_text": "Cabine Business disponible",
+    "business_seats_text": "3 sièges Business disponibles",
+    "upgrade_offers": [],
+    "checkin_text": "Enregistrement ouvert",
+    "messages": []
+  },
+  "scenarios": {
+    "economy_only": {
+      "description": "Economy only - Business cabin unavailable",
+      "overrides": {
+        "business_availability_text": "Cabine Business indisponible",
+        "business_seats_text": "Aucun siège Business",
+        "messages": ["Aucune offre de surclassement n'est disponible pour cette réservation."]
+      }
+    },
+    "economy_and_business": {
+      "description": "Economy + Business visible, but no upgrade offer",
+      "overrides": {"business_seats_text": "6 sièges Business disponibles"}
+    },
+    "free_upgrade_3_business": {
+      "description": "3 Business seats, official free upgrade offer for the 3 passengers (Scenario A)",
+      "overrides": {
+        "upgrade_offers": [
+          {"offer_id": "UPG-BUS-FREE", "cabin_text": "Business", "price_text": "Gratuit", "miles_text": "0 Miles",
+           "passengers_text": "Pour 3 passagers", "availability_text": "Disponible", "has_accept_button": true}
+        ],
+        "messages": ["Bonne nouvelle : un surclassement vers Business vous est proposé."]
+      }
+    },
+    "two_business_available": {
+      "description": "Only 2 Business seats visible (Scenario B)",
+      "overrides": {
+        "business_seats_text": "2 sièges Business disponibles",
+        "upgrade_offers": [
+          {"offer_id": "UPG-BUS-2", "cabin_text": "Business", "price_text": "Gratuit", "miles_text": "0 Miles",
+           "passengers_text": "Pour 2 passagers", "availability_text": "Disponible", "has_accept_button": true}
+        ]
+      }
+    },
+    "paid_upgrade": {
+      "description": "3 Business seats, upgrade for 750 EUR (Scenario C)",
+      "overrides": {
+        "upgrade_offers": [
+          {"offer_id": "UPG-BUS-CASH", "cabin_text": "Business", "price_text": "750,00 €", "miles_text": "0 Miles",
+           "passengers_text": "Pour 3 passagers", "availability_text": "Disponible", "has_accept_button": true}
+        ]
+      }
+    },
+    "miles_upgrade": {
+      "description": "3 Business seats, upgrade for 30,000 Miles (Scenario D)",
+      "overrides": {
+        "upgrade_offers": [
+          {"offer_id": "UPG-BUS-MILES", "cabin_text": "Business", "price_text": "0 €", "miles_text": "30 000 Miles",
+           "passengers_text": "Pour 3 passagers", "availability_text": "Disponible", "has_accept_button": true}
+        ]
+      }
+    },
+    "miles_cash_upgrade": {
+      "description": "3 Business seats, Miles + Cash upgrade",
+      "overrides": {
+        "upgrade_offers": [
+          {"offer_id": "UPG-BUS-MIX", "cabin_text": "Business", "price_text": "15 000 Miles + 90 €",
+           "passengers_text": "Pour 3 passagers", "availability_text": "Disponible", "has_accept_button": true}
+        ]
+      }
+    },
+    "no_upgrade": {
+      "description": "Business has seats but no upgrade offer at all",
+      "overrides": {
+        "messages": ["Aucune offre de surclassement n'est disponible pour cette réservation."]
+      }
+    },
+    "business_unavailable": {
+      "description": "Business unavailable (Scenario E)",
+      "overrides": {
+        "business_availability_text": "Cabine Business complète",
+        "business_seats_text": "Aucun siège Business"
+      }
+    },
+    "checkin_closed": {
+      "description": "Check-in closed",
+      "overrides": {"checkin_text": "Enregistrement fermé"}
+    },
+    "checkin_not_open": {
+      "description": "Check-in not yet open",
+      "overrides": {"checkin_text": "L'enregistrement ouvrira 30 h avant le départ"}
+    },
+    "checkin_open": {
+      "description": "Check-in open, Business visible, no offer yet",
+      "overrides": {"checkin_text": "Enregistrement ouvert", "business_seats_text": "4 sièges Business disponibles"}
+    },
+    "not_confirmed_by_airline": {
+      "description": "Free offer for 3 shown, but data not confirmed by the airline system (Scenario F)",
+      "confirmed_by_airline": false,
+      "overrides": {
+        "upgrade_offers": [
+          {"offer_id": "UPG-BUS-FREE", "cabin_text": "Business", "price_text": "Gratuit", "miles_text": "0 Miles",
+           "passengers_text": "Pour 3 passagers", "availability_text": "Disponible", "has_accept_button": true}
+        ]
+      }
+    },
+    "conflicting_data": {
+      "description": "Business marked unavailable while 3 seats are displayed",
+      "overrides": {
+        "business_availability_text": "Cabine Business indisponible",
+        "business_seats_text": "3 sièges Business disponibles"
+      }
+    },
+    "login_required": {
+      "description": "Session expired: manual login needed",
+      "overrides": {"page_kind": "login", "messages": ["Veuillez vous connecter."]}
+    },
+    "captcha": {
+      "description": "Bot check displayed: the user must solve it",
+      "overrides": {"page_kind": "captcha", "messages": ["Vérifiez que vous n'êtes pas un robot."]}
+    }
+  }
+}
