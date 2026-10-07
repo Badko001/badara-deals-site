@@ -62,6 +62,17 @@ OPPORTUNITY  ⇔  data confirmed by the airline (official source)
 
 **REFUSER** → recorded, no action.
 
+## Price watch (`backend/app/pricewatch`)
+
+| File | Role |
+|---|---|
+| `models.py` | `PriceWatch` (origin, 1–12 destinations, date window, trip length, 1–9 passengers, cabin, max price, airline filter), `FareQuote`, `PriceAlert`. |
+| `providers.py` | `FareProvider` protocol; `MockFareProvider` (fictitious, deterministic); `DuffelFareProvider` (official aggregator API, user's token — TODO: verify with a real token). No scraping. |
+| `engine.py` | `PriceWatchEngine`: polite rotation over (destination × date) combinations, at most `MAX_DATES_PER_WATCH` searches per watch per check, interval ≥ 1 h; history in `fare_quotes`; alerts `BELOW_THRESHOLD` / `NEW_LOW` / `PRICE_DROP` without duplicates; link to the official booking site (AF / KLM / Transavia). |
+
+API: `/api/pricewatch/{status,watches,watches/{id}/check,watches/{id}/history,alerts,start,stop}`.
+No booking or payment happens in the application.
+
 ## Adding an airline
 
 1. `browser/selectors/<airline>.py` with a `SelectorMap`.

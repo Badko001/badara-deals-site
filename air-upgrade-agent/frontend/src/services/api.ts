@@ -2,7 +2,11 @@ import type {
   CostLimits,
   Dashboard,
   MockScenarios,
+  NewPriceWatch,
+  PriceAlert,
+  PriceWatchStatus,
   UpgradeExecutionResult,
+  WatchSummary,
 } from "../types/api";
 
 const BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? "";
@@ -45,13 +49,24 @@ export const api = {
     }),
   decline: (id: string) =>
     request<unknown>(`/confirmations/${encodeURIComponent(id)}/decline`, { method: "POST" }),
-  setLimits: (cash_limit: number, miles_limit: number) =>
+  setLimits: (cash_limit: number, miles_limit: number, passengers_target: number) =>
     request<CostLimits>("/settings/limits", {
       method: "PUT",
-      body: JSON.stringify({ cash_limit, miles_limit }),
+      body: JSON.stringify({ cash_limit, miles_limit, passengers_target }),
     }),
   startSession: () =>
     request<unknown>("/session/start", { method: "POST", body: JSON.stringify({}) }),
+  priceWatchStatus: () => request<PriceWatchStatus>("/pricewatch/status"),
+  watches: () => request<WatchSummary[]>("/pricewatch/watches"),
+  addWatch: (watch: NewPriceWatch) =>
+    request<unknown>("/pricewatch/watches", { method: "POST", body: JSON.stringify(watch) }),
+  deleteWatch: (id: string) =>
+    request<unknown>(`/pricewatch/watches/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  checkWatch: (id: string) =>
+    request<unknown>(`/pricewatch/watches/${encodeURIComponent(id)}/check`, { method: "POST" }),
+  priceAlerts: () => request<PriceAlert[]>("/pricewatch/alerts"),
+  startPriceWatch: () => request<unknown>("/pricewatch/start", { method: "POST" }),
+  stopPriceWatch: () => request<unknown>("/pricewatch/stop", { method: "POST" }),
   mockScenarios: () => request<MockScenarios>("/mock/scenarios"),
   setMockScenario: (name: string) =>
     request<unknown>("/mock/scenario", { method: "POST", body: JSON.stringify({ name }) }),

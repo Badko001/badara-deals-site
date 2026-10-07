@@ -8,10 +8,12 @@ from app.agent.orchestrator import LLMClient, LLMOrchestrator
 from app.booking.providers.airfrance import AirFranceProvider
 from app.booking.providers.base import AirlineProvider
 from app.booking.providers.mock_airfrance import MockAirFrance, MockAirFranceProvider
-from app.config import ProviderName, Settings
+from app.config import FareProviderName, ProviderName, Settings
 from app.models.actions import UpgradeExecutionResult
 from app.monitoring.engine import MonitoringEngine
 from app.notifications.service import NotificationChannel, NotificationService, WebhookChannel
+from app.pricewatch.engine import PriceWatchEngine
+from app.pricewatch.providers import DuffelFareProvider, FareProvider, MockFareProvider
 from app.services.audit import AuditLog
 from app.services.confirmations import ConfirmationService
 from app.services.db import Database
@@ -31,6 +33,7 @@ class Container:
     orchestrator: LLMOrchestrator
     monitoring: MonitoringEngine
     executor: UpgradeExecutor
+    pricewatch: PriceWatchEngine
     mock: MockAirFrance | None = None
     last_execution: UpgradeExecutionResult | None = field(default=None)
 
@@ -42,6 +45,7 @@ class Container:
         provider: AirlineProvider | None = None,
         llm_client: LLMClient | None = None,
         webhook_url: str | None = None,
+        fare_provider: FareProvider | None = None,
     ) -> Container:
         db = Database(settings.database_url)
         audit = AuditLog(db)
@@ -74,6 +78,14 @@ class Container:
             settings=settings,
         )
         executor = UpgradeExecutor(provider, confirmations, audit, settings)
+        if fare_provider is None:
+            if settings.fare_provider is FareProviderName.DUFFEL and settings.duffel_api_token:
+                fare_provider = DuffelFareProvider(settings.duffel_api_token.get_secret_value())
+            else:
+                fare_provider = MockFareProvider()
+        pricewatch = PriceWatchEngine(
+            provider=fare_provider, db=db, notifier=notifier, audit=audit, settings=settings
+        )
         return cls(
             settings=settings,
             db=db,
@@ -85,5 +97,6 @@ class Container:
             orchestrator=orchestrator,
             monitoring=monitoring,
             executor=executor,
+            pricewatch=pricewatch,
             mock=mock,
         )

@@ -148,11 +148,14 @@ async def get_limits(request: Request) -> CostLimits:
 @router.put("/settings/limits", response_model=CostLimits)
 async def set_limits(body: LimitsUpdate, request: Request) -> CostLimits:
     c = _c(request)
-    limits = c.runtime.set_limits(body.cash_limit, body.miles_limit)
+    limits = c.runtime.set_limits(body.cash_limit, body.miles_limit, body.passengers_target)
     c.audit.record(
         "LIMITS_CHANGED",
         action="update limits",
-        result=f"cash_limit={limits.cash_limit} miles_limit={limits.miles_limit}",
+        result=(
+            f"cash_limit={limits.cash_limit} miles_limit={limits.miles_limit} "
+            f"passengers_target={limits.passengers_target}"
+        ),
     )
     return limits
 

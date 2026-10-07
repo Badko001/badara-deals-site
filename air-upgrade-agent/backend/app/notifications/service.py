@@ -25,6 +25,7 @@ class NotificationEvent(StrEnum):
     CHECKIN_OPEN = "CHECKIN_OPEN"
     NO_LONGER_AVAILABLE = "NO_LONGER_AVAILABLE"
     ACTION_REQUIRED = "ACTION_REQUIRED"
+    PRICE_ALERT = "PRICE_ALERT"
 
 
 class Notification(BaseModel):
@@ -90,6 +91,8 @@ def build_message(event: NotificationEvent, decision: UpgradeDecision | None = N
         case NotificationEvent.ACTION_REQUIRED:
             hint = decision.recommendation if decision else "Votre intervention est requise."
             return f"Action requise : {hint}"
+        case NotificationEvent.PRICE_ALERT:
+            return "Alerte prix."
     raise ValueError(event)  # pragma: no cover
 
 
@@ -99,9 +102,14 @@ class NotificationService:
         self.channels: list[NotificationChannel] = [self.memory, LogChannel(), *(channels or [])]
 
     async def notify(
-        self, event: NotificationEvent, decision: UpgradeDecision | None = None
+        self,
+        event: NotificationEvent,
+        decision: UpgradeDecision | None = None,
+        *,
+        message: str | None = None,
     ) -> Notification:
-        message = get_privacy_manager().sanitize_text(build_message(event, decision))
+        text = message if message is not None else build_message(event, decision)
+        message = get_privacy_manager().sanitize_text(text)
         notification = Notification(event=event, message=message)
         for channel in self.channels:
             await channel.send(notification)

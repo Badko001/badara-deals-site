@@ -65,6 +65,39 @@ class RuntimeSettingRow(Base):
     value: Mapped[str] = mapped_column(String(256))
 
 
+class PriceWatchRow(Base):
+    __tablename__ = "price_watches"
+
+    watch_id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    data: Mapped[dict[str, Any]] = mapped_column(JSON)
+    active: Mapped[bool] = mapped_column(default=True)
+    cursor: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class FareQuoteRow(Base):
+    __tablename__ = "fare_quotes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    watch_id: Mapped[str] = mapped_column(String(32), index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    destination: Mapped[str] = mapped_column(String(3), index=True)
+    data: Mapped[dict[str, Any]] = mapped_column(JSON)
+    total_price: Mapped[str] = mapped_column(String(32))
+
+
+class PriceAlertRow(Base):
+    __tablename__ = "price_alerts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    watch_id: Mapped[str] = mapped_column(String(32), index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    destination: Mapped[str] = mapped_column(String(3))
+    kind: Mapped[str] = mapped_column(String(32))
+    total_price: Mapped[str] = mapped_column(String(32))
+    data: Mapped[dict[str, Any]] = mapped_column(JSON)
+
+
 class Database:
     def __init__(self, url: str) -> None:
         kwargs: dict[str, Any] = {}

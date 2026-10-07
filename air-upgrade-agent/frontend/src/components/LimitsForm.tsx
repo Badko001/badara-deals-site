@@ -6,18 +6,27 @@ import type { CostLimits } from "../types/api";
 export function LimitsForm({ limits, onSaved }: { limits: CostLimits; onSaved: () => void }) {
   const [cash, setCash] = useState(String(limits.cash_limit));
   const [mi, setMi] = useState(String(limits.miles_limit));
+  const [pax, setPax] = useState(String(limits.passengers_target));
   const [error, setError] = useState<string | null>(null);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const cashValue = Number(cash);
     const milesValue = Number(mi);
-    if (!(cashValue >= 0) || !Number.isInteger(milesValue) || milesValue < 0) {
-      setError("Valeurs invalides");
+    const paxValue = Number(pax);
+    if (
+      !(cashValue >= 0) ||
+      !Number.isInteger(milesValue) ||
+      milesValue < 0 ||
+      !Number.isInteger(paxValue) ||
+      paxValue < 1 ||
+      paxValue > 9
+    ) {
+      setError("Valeurs invalides (passagers : 1 à 9)");
       return;
     }
     try {
-      await api.setLimits(cashValue, milesValue);
+      await api.setLimits(cashValue, milesValue, paxValue);
       setError(null);
       onSaved();
     } catch (e) {
@@ -30,9 +39,20 @@ export function LimitsForm({ limits, onSaved }: { limits: CostLimits; onSaved: (
     <section className="card">
       <h2>Limites</h2>
       <p className="small muted">
-        {free ? "Mode FREE UPGRADE : 0 € et 0 Miles." : "Attention : mode avec budget."}
+        {free ? "Mode FREE UPGRADE : 0 € et 0 Miles." : "Attention : mode avec budget."}{" "}
+        Tous les passagers doivent être surclassés ensemble.
       </p>
       <form className="limits" onSubmit={(e) => void submit(e)}>
+        <label>
+          Passagers
+          <select value={pax} onChange={(e) => { setPax(e.target.value); }}>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </label>
         <label>
           Cash max (€)
           <input inputMode="decimal" value={cash} onChange={(e) => { setCash(e.target.value); }} />

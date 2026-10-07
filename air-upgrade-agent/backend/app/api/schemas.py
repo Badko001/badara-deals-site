@@ -67,6 +67,7 @@ class CheckResponse(BaseModel):
 class LimitsUpdate(BaseModel):
     cash_limit: Money = Field(ge=0)
     miles_limit: int = Field(ge=0)
+    passengers_target: int | None = Field(default=None, ge=1, le=9)
 
 
 class SessionStart(BaseModel):
