@@ -73,6 +73,14 @@ class AirFranceProvider(AirlineProvider):
             logger.warning("Session not ready: %s", type(exc).__name__)
             self._ready = False
 
+    async def select_booking(self, key: str, reference: str | None) -> None:
+        """Open another of the user's bookings, through visible links only."""
+        if reference == self.booking_hint:
+            return
+        self.booking_hint = reference
+        if self._ready and self.agent.is_open:
+            await self.agent.navigate_to_booking(reference)
+
     async def close(self) -> None:
         if self._login_task is not None:
             self._login_task.cancel()

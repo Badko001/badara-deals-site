@@ -81,3 +81,6 @@ code { font-size: 0.8rem; }
 .watch-form .wide { grid-column: 1 / -1; }
 .small-btn { display: inline-block; margin-top: 6px; font-size: 0.82rem; padding: 4px 10px; text-decoration: none; }
 .grid.single { grid-template-columns: 1fr; }
+.booking-bar { display: grid; gap: 10px; }
+.booking-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; }
+.booking-select { display: grid; gap: 4px; font-size: 0.85rem; flex: 1 1 260px; }

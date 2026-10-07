@@ -55,7 +55,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
             settings.dry_run,
         )
         yield
-        await container.monitoring.stop_monitoring()
+        await container.bookings.stop_all()
         await container.pricewatch.stop()
         await container.provider.close()
 

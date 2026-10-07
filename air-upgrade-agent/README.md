@@ -17,6 +17,15 @@ par défaut à **0 € et 0 Miles**.
 | Signale les offres payantes / en Miles, sans les exécuter | Appeler une API privée non documentée, réserver artificiellement des sièges |
 | N'agit qu'après **CONFIRMER**, relit la page, et vérifie ensuite le résultat chez la compagnie | Falsifier un PNR, un billet ou une carte d'embarquement |
 
+## Plusieurs réservations
+
+Dans l'onglet **Surclassement**, « + Ajouter une réservation » : un nom, la référence (facultative) et le
+nombre de passagers à surclasser (1 à 9). Chaque réservation a sa propre surveillance, ses alertes
+(préfixées par son nom) et ses confirmations. La référence complète reste **en mémoire uniquement** ;
+seule sa version masquée (`PNR_****123`) est enregistrée et sert à vérifier que la page affichée est
+bien la bonne réservation. Après un redémarrage, en mode réel, ressaisissez la référence pour que
+l'agent ouvre la réservation.
+
 ## Veille des prix (onglet « Veille des prix »)
 
 Surveille les **prix publiés** et vous alerte quand ils baissent :

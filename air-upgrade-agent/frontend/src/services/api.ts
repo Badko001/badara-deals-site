@@ -1,7 +1,9 @@
 import type {
+  BookingInfo,
   CostLimits,
   Dashboard,
   MockScenarios,
+  NewBooking,
   NewPriceWatch,
   PriceAlert,
   PriceWatchStatus,
@@ -38,19 +40,39 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+const q = (bookingId: string | null): string =>
+  bookingId ? `?booking_id=${encodeURIComponent(bookingId)}` : "";
+
 export const api = {
-  dashboard: () => request<Dashboard>("/dashboard"),
-  checkNow: () => request<unknown>("/check", { method: "POST" }),
-  startMonitoring: () => request<unknown>("/monitoring/start", { method: "POST" }),
-  stopMonitoring: () => request<unknown>("/monitoring/stop", { method: "POST" }),
+  dashboard: (bookingId: string | null) => request<Dashboard>(`/dashboard${q(bookingId)}`),
+  checkNow: (bookingId: string | null) =>
+    request<unknown>(`/check${q(bookingId)}`, { method: "POST" }),
+  startMonitoring: (bookingId: string | null) =>
+    request<unknown>(`/monitoring/start${q(bookingId)}`, { method: "POST" }),
+  stopMonitoring: (bookingId: string | null) =>
+    request<unknown>(`/monitoring/stop${q(bookingId)}`, { method: "POST" }),
+  addBooking: (booking: NewBooking) =>
+    request<BookingInfo>("/bookings", { method: "POST", body: JSON.stringify(booking) }),
+  updateBooking: (bookingId: string, changes: Partial<Omit<NewBooking, "mock_scenario">>) =>
+    request<BookingInfo>(`/bookings/${encodeURIComponent(bookingId)}`, {
+      method: "PATCH",
+      body: JSON.stringify(changes),
+    }),
+  deleteBooking: (bookingId: string) =>
+    request<unknown>(`/bookings/${encodeURIComponent(bookingId)}`, { method: "DELETE" }),
   confirm: (id: string) =>
     request<UpgradeExecutionResult>(`/confirmations/${encodeURIComponent(id)}/confirm`, {
       method: "POST",
     }),
   decline: (id: string) =>
     request<unknown>(`/confirmations/${encodeURIComponent(id)}/decline`, { method: "POST" }),
-  setLimits: (cash_limit: number, miles_limit: number, passengers_target: number) =>
-    request<CostLimits>("/settings/limits", {
+  setLimits: (
+    bookingId: string | null,
+    cash_limit: number,
+    miles_limit: number,
+    passengers_target: number,
+  ) =>
+    request<CostLimits>(`/settings/limits${q(bookingId)}`, {
       method: "PUT",
       body: JSON.stringify({ cash_limit, miles_limit, passengers_target }),
     }),
@@ -67,7 +89,12 @@ export const api = {
   priceAlerts: () => request<PriceAlert[]>("/pricewatch/alerts"),
   startPriceWatch: () => request<unknown>("/pricewatch/start", { method: "POST" }),
   stopPriceWatch: () => request<unknown>("/pricewatch/stop", { method: "POST" }),
-  mockScenarios: () => request<MockScenarios>("/mock/scenarios"),
-  setMockScenario: (name: string) =>
-    request<unknown>("/mock/scenario", { method: "POST", body: JSON.stringify({ name }) }),
+  mockScenarios: (bookingId: string | null) =>
+    request<MockScenarios>(`/mock/scenarios${q(bookingId)}`),
+  setMockScenario: (bookingId: string | null, name: string) =>
+    request<unknown>(`/mock/scenario${q(bookingId)}`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }),
+  mockPageUrl: (bookingId: string | null) => `${BASE}/api/mock/page${q(bookingId)}`,
 };

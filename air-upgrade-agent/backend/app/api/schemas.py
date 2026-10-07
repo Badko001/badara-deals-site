@@ -11,6 +11,7 @@ from app.models.actions import UpgradeExecutionResult
 from app.models.domain import Money
 from app.monitoring.engine import ChangeEvent, MonitoringState
 from app.notifications.service import Notification
+from app.services.bookings import BookingInfo, BookingSummary
 from app.services.confirmations import PendingConfirmation
 
 
@@ -48,6 +49,8 @@ class FlightView(BaseModel):
 
 
 class DashboardResponse(BaseModel):
+    booking: BookingInfo
+    bookings: list[BookingSummary]
     config: RuntimeConfig
     limits: CostLimits
     monitoring: MonitoringState
@@ -80,3 +83,18 @@ class SessionStart(BaseModel):
 
 class ScenarioUpdate(BaseModel):
     name: str
+
+
+class BookingCreate(BaseModel):
+    label: str = Field(min_length=1, max_length=80)
+    reference: str | None = Field(
+        default=None, max_length=8, description="Full booking reference: kept in memory only."
+    )
+    passengers_target: int = Field(default=1, ge=1, le=9)
+    mock_scenario: str | None = None
+
+
+class BookingUpdate(BaseModel):
+    label: str | None = Field(default=None, min_length=1, max_length=80)
+    reference: str | None = Field(default=None, max_length=8)
+    passengers_target: int | None = Field(default=None, ge=1, le=9)

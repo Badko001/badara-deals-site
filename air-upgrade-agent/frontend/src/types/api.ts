@@ -129,6 +129,8 @@ export interface RuntimeConfig {
 }
 
 export interface Dashboard {
+  booking: BookingInfo;
+  bookings: BookingSummary[];
   config: RuntimeConfig;
   limits: CostLimits;
   monitoring: MonitoringState;
@@ -204,4 +206,31 @@ export interface PriceWatchStatus {
   last_run: string | null;
   next_run: string | null;
   interval_seconds: number;
+}
+
+// --- Bookings ------------------------------------------------------------------
+
+export interface BookingInfo {
+  booking_id: string;
+  label: string;
+  reference_redacted: string | null;
+  reference_in_memory: boolean;
+  passengers_target: number;
+  mock_scenario: string | null;
+  created_at: string | null;
+}
+
+export interface BookingSummary {
+  booking: BookingInfo;
+  status: MonitoringStatus;
+  decision_status: DecisionStatus | null;
+  has_pending_confirmation: boolean;
+  last_check: string | null;
+}
+
+export interface NewBooking {
+  label: string;
+  reference: string | null;
+  passengers_target: number;
+  mock_scenario: string | null;
 }

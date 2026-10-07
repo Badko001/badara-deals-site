@@ -3,7 +3,15 @@ import type { FormEvent } from "react";
 import { api } from "../services/api";
 import type { CostLimits } from "../types/api";
 
-export function LimitsForm({ limits, onSaved }: { limits: CostLimits; onSaved: () => void }) {
+export function LimitsForm({
+  bookingId,
+  limits,
+  onSaved,
+}: {
+  bookingId: string | null;
+  limits: CostLimits;
+  onSaved: () => void;
+}) {
   const [cash, setCash] = useState(String(limits.cash_limit));
   const [mi, setMi] = useState(String(limits.miles_limit));
   const [pax, setPax] = useState(String(limits.passengers_target));
@@ -26,7 +34,7 @@ export function LimitsForm({ limits, onSaved }: { limits: CostLimits; onSaved: (
       return;
     }
     try {
-      await api.setLimits(cashValue, milesValue, paxValue);
+      await api.setLimits(bookingId, cashValue, milesValue, paxValue);
       setError(null);
       onSaved();
     } catch (e) {
@@ -40,7 +48,8 @@ export function LimitsForm({ limits, onSaved }: { limits: CostLimits; onSaved: (
       <h2>Limites</h2>
       <p className="small muted">
         {free ? "Mode FREE UPGRADE : 0 € et 0 Miles." : "Attention : mode avec budget."}{" "}
-        Tous les passagers doivent être surclassés ensemble.
+        Tous les passagers de cette réservation doivent être surclassés ensemble. Le
+        nombre de passagers est propre à chaque réservation ; Cash et Miles valent pour toutes.
       </p>
       <form className="limits" onSubmit={(e) => void submit(e)}>
         <label>

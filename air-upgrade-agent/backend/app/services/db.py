@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, Integer, String, Text, create_engine
+from sqlalchemy import JSON, DateTime, Integer, String, Text, create_engine, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -42,10 +42,22 @@ class SnapshotRow(Base):
     decision: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
 
+class BookingRow(Base):
+    __tablename__ = "bookings"
+
+    booking_id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    label: Mapped[str] = mapped_column(String(80))
+    reference_redacted: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    passengers_target: Mapped[int] = mapped_column(Integer, default=3)
+    mock_scenario: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class ConfirmationRow(Base):
     __tablename__ = "confirmations"
 
     confirmation_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    booking_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
     option_id: Mapped[str] = mapped_column(String(64))
     snapshot_id: Mapped[str] = mapped_column(String(64))
     state: Mapped[str] = mapped_column(String(16), index=True)
@@ -108,6 +120,14 @@ class Database:
         self.engine: Engine = create_engine(url, **kwargs)
         self._sessions = sessionmaker(self.engine, expire_on_commit=False)
         Base.metadata.create_all(self.engine)
+        self._migrate()
+
+    def _migrate(self) -> None:
+        """Additive migrations for databases created by older versions."""
+        columns = {c["name"] for c in inspect(self.engine).get_columns("confirmations")}
+        if "booking_id" not in columns:
+            with self.engine.begin() as conn:
+                conn.execute(text("ALTER TABLE confirmations ADD COLUMN booking_id VARCHAR(32)"))
 
     def session(self) -> Session:
         return self._sessions()

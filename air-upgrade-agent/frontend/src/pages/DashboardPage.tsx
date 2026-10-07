@@ -1,18 +1,48 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { BookingBar } from "../components/BookingBar";
 import { DecisionPanel } from "../components/DecisionPanel";
 import { FlightCard } from "../components/FlightCard";
 import { LimitsForm } from "../components/LimitsForm";
 import { MockScenarioPicker } from "../components/MockScenarioPicker";
 import { NotificationsList } from "../components/NotificationsList";
 import { OpportunityPanel } from "../components/OpportunityPanel";
-import { useDashboard } from "../hooks/useDashboard";
+import { BOOKING_NOT_FOUND, useDashboard } from "../hooks/useDashboard";
 import { api } from "../services/api";
-import type { UpgradeExecutionResult } from "../types/api";
+
+const STORAGE_KEY = "aua.selectedBooking";
+
+function loadSelected(): string | null {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveSelected(id: string | null): void {
+  try {
+    if (id) window.localStorage.setItem(STORAGE_KEY, id);
+    else window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* storage unavailable: selection simply not remembered */
+  }
+}
 
 export function DashboardPage() {
-  const { data, error, refresh } = useDashboard();
+  const [selected, setSelected] = useState<string | null>(loadSelected);
+  const { data, error, refresh } = useDashboard(selected);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [lastResult, setLastResult] = useState<UpgradeExecutionResult | null>(null);
+
+  const select = (id: string | null) => {
+    saveSelected(id);
+    setSelected(id);
+    setActionError(null);
+  };
+
+  useEffect(() => {
+    // The remembered booking was deleted: fall back to the first one.
+    if (error === BOOKING_NOT_FOUND && selected !== null) select(null);
+  }, [error, selected]);
 
   const act = async (fn: () => Promise<unknown>) => {
     try {
@@ -29,7 +59,8 @@ export function DashboardPage() {
   }
 
   const { config, monitoring } = data;
-  const execution = lastResult ?? data.last_execution;
+  const bookingId = data.booking.booking_id;
+  const execution = data.last_execution;
   const isMock = config.mock_scenario !== null;
 
   return (
@@ -52,21 +83,29 @@ export function DashboardPage() {
       {error && <p className="error">{error}</p>}
       {actionError && <p className="error">{actionError}</p>}
 
+      <BookingBar
+        bookings={data.bookings}
+        current={data.booking}
+        isMock={isMock}
+        onSelect={select}
+        onChanged={() => void refresh()}
+      />
+
       <div className="toolbar">
         {!isMock && !config.session_ready && (
           <button className="btn" onClick={() => void act(api.startSession)}>
             Ouvrir le navigateur (connexion manuelle)
           </button>
         )}
-        <button className="btn" onClick={() => void act(api.checkNow)}>
+        <button className="btn" onClick={() => void act(() => api.checkNow(bookingId))}>
           Vérifier maintenant
         </button>
         {monitoring.running ? (
-          <button className="btn" onClick={() => void act(api.stopMonitoring)}>
+          <button className="btn" onClick={() => void act(() => api.stopMonitoring(bookingId))}>
             Arrêter la surveillance
           </button>
         ) : (
-          <button className="btn primary" onClick={() => void act(api.startMonitoring)}>
+          <button className="btn primary" onClick={() => void act(() => api.startMonitoring(bookingId))}>
             Démarrer la surveillance
           </button>
         )}
@@ -83,8 +122,7 @@ export function DashboardPage() {
         <OpportunityPanel
           pending={data.pending_confirmation}
           dryRun={config.dry_run}
-          onDone={(result) => {
-            setLastResult(result);
+          onDone={() => {
             void refresh();
           }}
         />
@@ -101,8 +139,15 @@ export function DashboardPage() {
           <DecisionPanel decision={data.decision} />
         </div>
         <div>
-          {isMock && <MockScenarioPicker onChange={() => void refresh()} />}
-          <LimitsForm limits={data.limits} onSaved={() => void refresh()} />
+          {isMock && (
+            <MockScenarioPicker key={bookingId} bookingId={bookingId} onChange={() => void refresh()} />
+          )}
+          <LimitsForm
+            key={`${bookingId}-${data.limits.passengers_target}`}
+            bookingId={bookingId}
+            limits={data.limits}
+            onSaved={() => void refresh()}
+          />
           <NotificationsList items={data.notifications} />
         </div>
       </div>

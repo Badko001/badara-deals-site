@@ -43,6 +43,13 @@ class AirlineProvider(ABC):
     def session_ready(self) -> bool:
         return True
 
+    async def select_booking(self, key: str, reference: str | None) -> None:  # noqa: B027
+        """Point the provider at one of the user's bookings (several can be watched).
+
+        ``key`` identifies the booking locally; ``reference`` is the full booking
+        reference, kept in memory only, used to open the right booking.
+        """
+
     # ------------------------------------------------------------ reading
     @abstractmethod
     async def read_raw(self) -> RawPageObservation:

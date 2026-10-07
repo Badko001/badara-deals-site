@@ -9,13 +9,15 @@ from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import ColumnElement, or_, select
 
 from app.errors import HumanConfirmationRequired
 from app.models import BookingSnapshot, UpgradeDecision
 from app.models.actions import HumanConfirmation
 from app.models.domain import Money, utcnow
 from app.services.db import ConfirmationRow, Database
+
+DEFAULT_BOOKING_ID = "default"
 
 
 class ConfirmationState(StrEnum):
@@ -29,6 +31,7 @@ class ConfirmationState(StrEnum):
 
 class PendingConfirmation(BaseModel):
     confirmation_id: str
+    booking_id: str
     option_id: str
     snapshot_id: str
     state: ConfirmationState
@@ -47,6 +50,7 @@ def _aware(dt: datetime) -> datetime:
 def _to_model(row: ConfirmationRow) -> PendingConfirmation:
     return PendingConfirmation(
         confirmation_id=row.confirmation_id,
+        booking_id=row.booking_id or DEFAULT_BOOKING_ID,
         option_id=row.option_id,
         snapshot_id=row.snapshot_id,
         state=ConfirmationState(row.state),
@@ -59,10 +63,34 @@ def _to_model(row: ConfirmationRow) -> PendingConfirmation:
     )
 
 
+def booking_of(db: Database, confirmation_id: str) -> str | None:
+    """Which booking a confirmation request belongs to (None if unknown id)."""
+    with db.session() as session:
+        row = session.get(ConfirmationRow, confirmation_id)
+        if row is None:
+            return None
+        return row.booking_id or DEFAULT_BOOKING_ID
+
+
 class ConfirmationService:
-    def __init__(self, db: Database, ttl_seconds: int) -> None:
+    """Confirmation requests of ONE booking (rows of older versions belong to 'default')."""
+
+    def __init__(
+        self, db: Database, ttl_seconds: int, booking_id: str = DEFAULT_BOOKING_ID
+    ) -> None:
         self.db = db
         self.ttl = timedelta(seconds=ttl_seconds)
+        self.booking_id = booking_id
+
+    def _mine(self) -> ColumnElement[bool]:
+        if self.booking_id == DEFAULT_BOOKING_ID:
+            return or_(
+                ConfirmationRow.booking_id == self.booking_id, ConfirmationRow.booking_id.is_(None)
+            )
+        return ConfirmationRow.booking_id == self.booking_id
+
+    def _owns(self, row: ConfirmationRow) -> bool:
+        return (row.booking_id or DEFAULT_BOOKING_ID) == self.booking_id
 
     def create_pending(
         self, decision: UpgradeDecision, snapshot: BookingSnapshot
@@ -73,11 +101,14 @@ class ConfirmationService:
         now = utcnow()
         with self.db.session() as session:
             for row in session.scalars(
-                select(ConfirmationRow).where(ConfirmationRow.state == ConfirmationState.PENDING)
+                select(ConfirmationRow).where(
+                    ConfirmationRow.state == ConfirmationState.PENDING, self._mine()
+                )
             ):
                 row.state = ConfirmationState.SUPERSEDED
             row = ConfirmationRow(
                 confirmation_id=uuid.uuid4().hex,
+                booking_id=self.booking_id,
                 option_id=decision.option_id,
                 snapshot_id=snapshot.snapshot_id,
                 state=ConfirmationState.PENDING,
@@ -103,7 +134,7 @@ class ConfirmationService:
         with self.db.session() as session:
             rows = session.scalars(
                 select(ConfirmationRow)
-                .where(ConfirmationRow.state == ConfirmationState.PENDING)
+                .where(ConfirmationRow.state == ConfirmationState.PENDING, self._mine())
                 .order_by(ConfirmationRow.created_at.desc())
             ).all()
             for row in rows:
@@ -118,7 +149,7 @@ class ConfirmationService:
     def _transition(self, confirmation_id: str, new_state: ConfirmationState) -> ConfirmationRow:
         with self.db.session() as session:
             row = session.get(ConfirmationRow, confirmation_id)
-            if row is None or row.state != ConfirmationState.PENDING:
+            if row is None or not self._owns(row) or row.state != ConfirmationState.PENDING:
                 raise HumanConfirmationRequired("No pending confirmation with this id")
             if _aware(row.expires_at) <= utcnow():
                 row.state = ConfirmationState.EXPIRED
@@ -157,7 +188,9 @@ class ConfirmationService:
     def expire_all(self) -> int:
         with self.db.session() as session:
             rows = session.scalars(
-                select(ConfirmationRow).where(ConfirmationRow.state == ConfirmationState.PENDING)
+                select(ConfirmationRow).where(
+                    ConfirmationRow.state == ConfirmationState.PENDING, self._mine()
+                )
             ).all()
             for row in rows:
                 row.state = ConfirmationState.EXPIRED

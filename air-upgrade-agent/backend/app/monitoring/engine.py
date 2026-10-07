@@ -30,7 +30,12 @@ from app.models import (
     UpgradeDecision,
 )
 from app.models.domain import utcnow
-from app.notifications.service import Notification, NotificationEvent, NotificationService
+from app.notifications.service import (
+    Notification,
+    NotificationEvent,
+    NotificationService,
+    build_message,
+)
 from app.security.privacy import redact_sensitive_data
 from app.services.audit import AuditLog
 from app.services.confirmations import ConfirmationService
@@ -165,6 +170,7 @@ class MonitoringEngine:
         confirmations: ConfirmationService,
         db: Database,
         settings: Settings,
+        label: str | None = None,
     ) -> None:
         self.provider = provider
         self.orchestrator = orchestrator
@@ -174,6 +180,7 @@ class MonitoringEngine:
         self.confirmations = confirmations
         self.db = db
         self.settings = settings
+        self.label = label  # booking name, shown in alerts when several bookings exist
         self.state = MonitoringState(interval_seconds=settings.effective_poll_interval())
         self.last_snapshot: BookingSnapshot | None = None
         self.last_decision: UpgradeDecision | None = None
@@ -263,7 +270,7 @@ class MonitoringEngine:
 
         if is_opp and not was_opp:
             self.confirmations.create_pending(curr, snapshot)
-            sent.append(await self.notifier.notify(NotificationEvent.OPPORTUNITY_FOUND, curr))
+            sent.append(await self._notify(NotificationEvent.OPPORTUNITY_FOUND, curr))
         elif (
             is_opp
             and was_opp
@@ -274,18 +281,26 @@ class MonitoringEngine:
             )
         ):
             self.confirmations.create_pending(curr, snapshot)
-            sent.append(await self.notifier.notify(NotificationEvent.OPPORTUNITY_CHANGED, curr))
+            sent.append(await self._notify(NotificationEvent.OPPORTUNITY_CHANGED, curr))
         elif was_opp and not is_opp:
             self.confirmations.expire_all()
-            sent.append(await self.notifier.notify(NotificationEvent.NO_LONGER_AVAILABLE, curr))
+            sent.append(await self._notify(NotificationEvent.NO_LONGER_AVAILABLE, curr))
 
         if any(c.type is ChangeType.CHECKIN_OPENED for c in changes):
-            sent.append(await self.notifier.notify(NotificationEvent.CHECKIN_OPEN, curr))
+            sent.append(await self._notify(NotificationEvent.CHECKIN_OPEN, curr))
         if curr.status is DecisionStatus.ACTION_REQUIRED and (
             prev is None or prev.status is not DecisionStatus.ACTION_REQUIRED
         ):
-            sent.append(await self.notifier.notify(NotificationEvent.ACTION_REQUIRED, curr))
+            sent.append(await self._notify(NotificationEvent.ACTION_REQUIRED, curr))
         return sent
+
+    async def _notify(
+        self, event: NotificationEvent, decision: UpgradeDecision | None = None
+    ) -> Notification:
+        text = build_message(event, decision)
+        if self.label:
+            text = f"[{self.label}] {text}"
+        return await self.notifier.notify(event, decision, message=text)
 
     def _persist(self, snapshot: BookingSnapshot, decision: UpgradeDecision) -> None:
         with self.db.session() as session:
@@ -334,7 +349,7 @@ class MonitoringEngine:
                 if self.state.consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
                     self.state.status = MonitoringStatus.ERROR
                     self.state.running = False
-                    await self.notifier.notify(NotificationEvent.ACTION_REQUIRED)
+                    await self._notify(NotificationEvent.ACTION_REQUIRED)
                     return
             interval = self.next_interval()
             self.state.interval_seconds = interval

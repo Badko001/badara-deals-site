@@ -62,6 +62,16 @@ OPPORTUNITY  ⇔  data confirmed by the airline (official source)
 
 **REFUSER** → recorded, no action.
 
+## Several bookings (`services/bookings.py`)
+
+`BookingManager` keeps one `BookingContext` per booking (scoped provider, `ConfirmationService`
+filtered by `booking_id`, `MonitoringEngine`, `UpgradeExecutor`). All bookings share one provider
+(one browser session) behind a lock; `select_booking()` opens the right booking through visible links.
+Persisted: label, redacted reference, passenger count (and mock scenario). The full reference lives in
+memory only. If the page shows another booking than expected (redacted references differ), the snapshot
+becomes `BOOKING_NOT_FOUND` — data is never attributed to the wrong booking.
+API: `/api/bookings` (GET, POST, PATCH, DELETE) and `?booking_id=` on per-booking endpoints.
+
 ## Price watch (`backend/app/pricewatch`)
 
 | File | Role |
