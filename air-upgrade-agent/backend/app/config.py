@@ -18,6 +18,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
+class FareProviderName(StrEnum):
+    MOCK = "mock"
+    DUFFEL = "duffel"
+
+
 class ProviderName(StrEnum):
     MOCK = "mock"
     AIR_FRANCE = "airfrance"
@@ -59,6 +64,14 @@ class Settings(BaseSettings):
     browser_executable_path: str | None = None
     manual_login_timeout_seconds: int = Field(default=600, ge=10)
     navigation_timeout_ms: int = Field(default=30_000, ge=1000)
+
+    # --- Price watch (published fares only, from an authorised API)
+    fare_provider: FareProviderName = FareProviderName.MOCK
+    duffel_api_token: SecretStr | None = None
+    fare_airline_filter: str = "AF"  # IATA code; empty = all airlines
+    price_watch_interval_seconds: int = Field(default=10_800, ge=3600)  # never more than hourly
+    price_drop_alert_percent: Decimal = Field(default=Decimal("10"), gt=0, le=90)
+    max_dates_per_watch: int = Field(default=7, ge=1, le=14)
 
     # --- Storage
     database_url: str = f"sqlite:///{PROJECT_ROOT / 'data' / 'air_upgrade_agent.db'}"

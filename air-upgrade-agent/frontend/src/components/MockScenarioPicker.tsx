@@ -2,21 +2,27 @@ import { useEffect, useState } from "react";
 import { api } from "../services/api";
 import type { MockScenarios } from "../types/api";
 
-export function MockScenarioPicker({ onChange }: { onChange: () => void }) {
+export function MockScenarioPicker({
+  bookingId,
+  onChange,
+}: {
+  bookingId: string | null;
+  onChange: () => void;
+}) {
   const [data, setData] = useState<MockScenarios | null>(null);
 
   useEffect(() => {
-    api.mockScenarios().then(setData, () => {
+    api.mockScenarios(bookingId).then(setData, () => {
       setData(null);
     });
-  }, []);
+  }, [bookingId]);
 
   if (data === null) return null;
 
   const select = async (name: string) => {
-    await api.setMockScenario(name);
+    await api.setMockScenario(bookingId, name);
     setData({ ...data, current: name });
-    await api.checkNow();
+    await api.checkNow(bookingId);
     onChange();
   };
 
@@ -32,7 +38,7 @@ export function MockScenarioPicker({ onChange }: { onChange: () => void }) {
         ))}
       </select>
       <p className="small">
-        <a href="/api/mock/page" target="_blank" rel="noreferrer">
+        <a href={api.mockPageUrl(bookingId)} target="_blank" rel="noreferrer">
           Voir la page simulée
         </a>
       </p>

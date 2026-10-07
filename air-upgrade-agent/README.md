@@ -13,9 +13,36 @@ par défaut à **0 € et 0 Miles**.
 |---|---|
 | Lit la page officielle dans un navigateur isolé où **vous** vous connectez à la main | Demander, stocker ou taper votre mot de passe |
 | Décide de façon déterministe (le LLM explique, sans être l'autorité) | Contourner un CAPTCHA, une authentification, un paiement ou un système de Miles |
-| Exige **une seule offre officielle couvrant les 3 passagers** | Combiner des offres individuelles, deviner une donnée invisible |
+| Exige **une seule offre officielle couvrant tous les passagers** | Combiner des offres individuelles, deviner une donnée invisible |
 | Signale les offres payantes / en Miles, sans les exécuter | Appeler une API privée non documentée, réserver artificiellement des sièges |
 | N'agit qu'après **CONFIRMER**, relit la page, et vérifie ensuite le résultat chez la compagnie | Falsifier un PNR, un billet ou une carte d'embarquement |
+
+## Plusieurs réservations
+
+Dans l'onglet **Surclassement**, « + Ajouter une réservation » : un nom, la référence (facultative) et le
+nombre de passagers à surclasser (1 à 9). Chaque réservation a sa propre surveillance, ses alertes
+(préfixées par son nom) et ses confirmations. La référence complète reste **en mémoire uniquement** ;
+seule sa version masquée (`PNR_****123`) est enregistrée et sert à vérifier que la page affichée est
+bien la bonne réservation. Après un redémarrage, en mode réel, ressaisissez la référence pour que
+l'agent ouvre la réservation.
+
+## Veille des prix (onglet « Veille des prix »)
+
+Surveille les **prix publiés** et vous alerte quand ils baissent :
+
+- **Dakar ↔ Paris** aller-retour (Air France) et **Escapades Europe** au départ de Paris
+  (Lisbonne, Barcelone, Rome, Amsterdam, Athènes, Madrid, Prague, Porto — AF, KLM, Transavia),
+  préconfigurés et modifiables ; ajoutez vos propres trajets (1 à 9 passagers, aller simple ou A/R).
+- Alertes : prix sous votre maximum, plus bas prix observé, baisse nette (≥ 10 % par défaut).
+  Pas de doublon : une destination n'est ré-alertée que si le prix baisse encore.
+- **Vous réservez et payez sur le site officiel** (lien dans l'alerte) : l'application ne manipule
+  jamais de carte bancaire.
+- Vérification au plus toutes les heures (3 h par défaut), avec un nombre limité de recherches par
+  passage : aucune sollicitation excessive.
+- Source : `FARE_PROVIDER=mock` (prix fictifs) ou `duffel` avec votre propre `DUFFEL_API_TOKEN`
+  (API d'agrégation qui inclut Air France). Le site Air France n'est jamais lu automatiquement
+  pour les prix. Aucun « tarif caché » : seulement les tarifs réellement proposés au public
+  (promos, Promo Rewards Flying Blue, etc.).
 
 ## Démarrage rapide (mode MOCK, aucune connexion à Air France)
 

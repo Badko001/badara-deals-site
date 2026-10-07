@@ -16,8 +16,8 @@ from app.services.container import Container  # noqa: E402
 
 
 def make_container(scenario: str = "free_upgrade_3_business", **overrides: object) -> Container:
+    overrides.setdefault("database_url", "sqlite://")
     settings = Settings(
-        database_url="sqlite://",
         mock_scenario=scenario,
         _env_file=None,  # type: ignore[call-arg]
         **overrides,  # type: ignore[arg-type]

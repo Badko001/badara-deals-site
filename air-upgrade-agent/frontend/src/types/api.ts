@@ -129,6 +129,8 @@ export interface RuntimeConfig {
 }
 
 export interface Dashboard {
+  booking: BookingInfo;
+  bookings: BookingSummary[];
   config: RuntimeConfig;
   limits: CostLimits;
   monitoring: MonitoringState;
@@ -142,4 +144,93 @@ export interface Dashboard {
 export interface MockScenarios {
   current: string;
   scenarios: Record<string, string>;
+}
+
+// --- Price watch ---------------------------------------------------------------
+
+export type FareCabin = "economy" | "premium_economy" | "business" | "first";
+
+export interface PriceWatch {
+  watch_id: string;
+  name: string;
+  origin: string;
+  destinations: string[];
+  depart_from: string;
+  depart_to: string;
+  trip_length_days: number | null;
+  passengers: number;
+  cabin: FareCabin;
+  max_total_price: number | null;
+  airlines: string[];
+  active: boolean;
+}
+
+export type NewPriceWatch = Omit<PriceWatch, "watch_id" | "active">;
+
+export interface FareQuote {
+  destination: string;
+  depart_date: string;
+  return_date: string | null;
+  total_price: number;
+  currency: string;
+  carrier: string | null;
+  flight_numbers: string[];
+  cabin: FareCabin;
+  passengers: number;
+  source: string;
+  observed_at: string;
+}
+
+export interface WatchSummary {
+  watch: PriceWatch;
+  best_current: FareQuote | null;
+  lowest_ever: FareQuote | null;
+  last_check: string | null;
+  quotes_count: number;
+}
+
+export interface PriceAlert {
+  watch_id: string;
+  watch_name: string;
+  kind: "BELOW_THRESHOLD" | "PRICE_DROP" | "NEW_LOW";
+  quote: FareQuote;
+  previous_price: number | null;
+  booking_url: string | null;
+  message: string;
+  timestamp: string;
+}
+
+export interface PriceWatchStatus {
+  source: string;
+  running: boolean;
+  last_run: string | null;
+  next_run: string | null;
+  interval_seconds: number;
+}
+
+// --- Bookings ------------------------------------------------------------------
+
+export interface BookingInfo {
+  booking_id: string;
+  label: string;
+  reference_redacted: string | null;
+  reference_in_memory: boolean;
+  passengers_target: number;
+  mock_scenario: string | null;
+  created_at: string | null;
+}
+
+export interface BookingSummary {
+  booking: BookingInfo;
+  status: MonitoringStatus;
+  decision_status: DecisionStatus | null;
+  has_pending_confirmation: boolean;
+  last_check: string | null;
+}
+
+export interface NewBooking {
+  label: string;
+  reference: string | null;
+  passengers_target: number;
+  mock_scenario: string | null;
 }

@@ -181,20 +181,28 @@ class BrowserAgent:
         raise AuthenticationRequired("Manual login not completed in time")
 
     async def navigate_to_booking(self, booking_hint: str | None = None) -> None:
-        """Go to the booking page through visible links only (no URL forging)."""
+        """Go to the booking page through visible links only (no URL forging).
+
+        With several bookings, ``booking_hint`` (the booking reference) selects the
+        right one: the displayed reference must contain it, otherwise the agent goes
+        back to the bookings list and clicks the entry showing that reference.
+        """
         if await self.detect_page_kind() is PageKind.BOOKING:
-            return
+            if not booking_hint:
+                return
+            shown = await self._text(self.selectors.fields["booking_reference_text"])
+            if shown and booking_hint.upper() in shown.upper():
+                return
         link = await self._first(self.selectors.booking_link)
         if link is None:
             raise BookingNotFound("Booking link not visible: open the booking manually")
-        if booking_hint:
-            filtered = self.page.locator(self.selectors.booking_link.candidates[0]).filter(
-                has_text=re.compile(re.escape(booking_hint), re.IGNORECASE)
-            )
-            if await filtered.count() > 0:
-                link = filtered.first
         await link.click()
         await self.page.wait_for_load_state("domcontentloaded")
+        if booking_hint:
+            entry = self.page.get_by_text(re.compile(re.escape(booking_hint), re.IGNORECASE)).first
+            if await entry.count() > 0:
+                await entry.click()
+                await self.page.wait_for_load_state("domcontentloaded")
         if await self.detect_page_kind() is not PageKind.BOOKING:
             raise BookingNotFound("Booking page not reached")
 

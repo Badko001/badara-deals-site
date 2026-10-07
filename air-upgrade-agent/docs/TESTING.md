@@ -52,3 +52,11 @@ reading, CAPTCHA/login detection, refusal without confirmation, stop on payment 
 and refusal to click with unverified real selectors.
 
 API end-to-end: `tests/integration/test_api.py`.
+
+## Price watch
+
+`tests/unit/test_pricewatch.py`: watch validation (1–9 passengers, IATA codes, dates), default
+watches (Dakar ↔ Paris, Escapades Europe), bounded date sampling, rotation (max searches per check),
+threshold alert sent once then only if lower, new-low detection, passenger multiplication and airline
+filter, source errors / rate limit (stop politely, never guess), interval ≥ 1 h, Duffel request and
+response parsing (mocked HTTP), API end-to-end, and the upgrade passenger count option.

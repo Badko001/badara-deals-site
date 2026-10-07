@@ -7,7 +7,7 @@ The AI does not need to know who you are to tell whether a free Business upgrade
 | Data read on the page | Kept as | Where it goes |
 |---|---|---|
 | Passenger names | `PASSENGER_001/002/003` + non-reversible HMAC internal id (per-process salt) | Registered for redaction, then discarded |
-| Booking reference (PNR) `ABC123` | `PNR_****123` | Same |
+| Booking reference (PNR) `ABC123` | `PNR_****123` | Same. A reference typed in the dashboard stays in memory only; only the redacted form is stored |
 | Ticket number `0571234567890` | `TICKET_*********7890` | Same |
 | E-mail, phone, Flying Blue, passport, address | `[EMAIL]`, `[PHONE]`, `[FLYING_BLUE]`, `[PASSPORT]`… | Never stored |
 | Password, cookies, tokens, card data | — | Never read, never stored, `[REDACTED]` if ever encountered |

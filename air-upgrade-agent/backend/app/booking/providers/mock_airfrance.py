@@ -50,10 +50,16 @@ def load_scenarios(path: Path = DEFAULT_SCENARIOS_PATH) -> dict[str, MockScenari
 class MockAirFrance:
     """Stateful fake airline system."""
 
-    def __init__(self, scenario: str = "free_upgrade_3_business", path: Path | None = None) -> None:
+    def __init__(
+        self,
+        scenario: str = "free_upgrade_3_business",
+        path: Path | None = None,
+        reference: str | None = None,
+    ) -> None:
         self.scenarios = load_scenarios(path or DEFAULT_SCENARIOS_PATH)
         self.page_reads = 0
         self.accepted_offers: list[str] = []
+        self.reference = reference  # fictitious booking reference shown on the page
         self.set_scenario(scenario)
 
     def set_scenario(self, name: str) -> None:
@@ -62,6 +68,8 @@ class MockAirFrance:
         self.scenario_name = name
         self._scenario = self.scenarios[name]
         self._page = self._scenario.page.model_copy(deep=True)
+        if self.reference and self._page.booking_reference_text:
+            self._page.booking_reference_text = self.reference
 
     @property
     def confirmed_by_airline(self) -> bool:
@@ -90,11 +98,34 @@ class MockAirFranceProvider(AirlineProvider):
     source = SnapshotSource.MOCK_AIR_FRANCE
     enforce_rate_limit = False
 
+    DEFAULT_KEY = "default"
+
     def __init__(
-        self, mock: MockAirFrance | None = None, observation: ObservationEngine | None = None
+        self,
+        mock: MockAirFrance | None = None,
+        observation: ObservationEngine | None = None,
+        default_scenario: str = "free_upgrade_3_business",
     ) -> None:
         super().__init__(observation)
-        self.mock = mock or MockAirFrance()
+        self.default_scenario = default_scenario
+        #: One simulated booking per local booking key.
+        self.mocks: dict[str, MockAirFrance] = {
+            self.DEFAULT_KEY: mock or MockAirFrance(default_scenario)
+        }
+        self.current_key = self.DEFAULT_KEY
+
+    @property
+    def mock(self) -> MockAirFrance:
+        return self.mocks[self.current_key]
+
+    def mock_for(self, key: str, reference: str | None = None) -> MockAirFrance:
+        if key not in self.mocks:
+            self.mocks[key] = MockAirFrance(self.default_scenario, reference=reference)
+        return self.mocks[key]
+
+    async def select_booking(self, key: str, reference: str | None) -> None:
+        self.mock_for(key, reference)
+        self.current_key = key
 
     async def read_raw(self) -> RawPageObservation:
         return self.mock.current_page()

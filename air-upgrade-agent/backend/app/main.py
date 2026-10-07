@@ -11,6 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.pricewatch_routes import router as pricewatch_router
 from app.api.routes import router
 from app.browser.agent import purge_old_screenshots
 from app.config import Settings, get_settings
@@ -43,6 +44,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
             parents=True, exist_ok=True
         )
     container = container or Container.build(settings)
+    container.pricewatch.seed_defaults()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -53,7 +55,8 @@ def create_app(settings: Settings | None = None, container: Container | None = N
             settings.dry_run,
         )
         yield
-        await container.monitoring.stop_monitoring()
+        await container.bookings.stop_all()
+        await container.pricewatch.stop()
         await container.provider.close()
 
     app = FastAPI(title="AIR UPGRADE AGENT", version="0.1.0", lifespan=lifespan)
@@ -61,7 +64,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
-        allow_methods=["GET", "POST", "PUT"],
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=["Content-Type"],
     )
 
@@ -74,6 +77,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         )
 
     app.include_router(router)
+    app.include_router(pricewatch_router)
     return app
 
 
