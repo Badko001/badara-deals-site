@@ -22,6 +22,22 @@ export class ApiError extends Error {
   }
 }
 
+/** FastAPI validation errors ([{loc, msg}, ...]) as one readable sentence. */
+function describeDetail(detail: unknown): string | null {
+  if (typeof detail === "string") return detail;
+  if (!Array.isArray(detail)) return null;
+  const parts = detail
+    .map((d: unknown) => {
+      if (typeof d !== "object" || d === null) return null;
+      const item = d as { loc?: unknown[]; msg?: unknown };
+      const field = Array.isArray(item.loc) ? item.loc.filter((x) => x !== "body").join(".") : "";
+      const msg = typeof item.msg === "string" ? item.msg : "valeur invalide";
+      return field ? `${field} : ${msg}` : msg;
+    })
+    .filter((x): x is string => x !== null);
+  return parts.length > 0 ? `Données invalides — ${parts.join(" ; ")}` : null;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE}/api${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -31,7 +47,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     let message = response.statusText;
     try {
       const body = (await response.json()) as { message?: string; detail?: unknown };
-      message = body.message ?? (typeof body.detail === "string" ? body.detail : message);
+      message = body.message ?? describeDetail(body.detail) ?? message;
     } catch {
       /* keep statusText */
     }

@@ -15,6 +15,9 @@ const codes = (text: string): string[] =>
     .map((c) => c.trim().toUpperCase())
     .filter((c) => c.length > 0);
 
+/** Keeps only 3-letter airport codes: "Dakar DSS, Lisbonne LIS" -> ["DSS", "LIS"]. */
+const airportCodes = (text: string): string[] => codes(text).filter((c) => /^[A-Z]{3}$/.test(c));
+
 export function AddWatchForm({ onAdded }: { onAdded: () => void }) {
   const [name, setName] = useState("");
   const [origin, setOrigin] = useState("CDG");
@@ -31,14 +34,30 @@ export function AddWatchForm({ onAdded }: { onAdded: () => void }) {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    const originCode = airportCodes(origin)[0];
+    const destinationCodes = airportCodes(destinations);
+    const stayDays = Number(stay);
+    const paxCount = Number(pax);
+    const problems: string[] = [];
+    if (!originCode) problems.push("Départ : indiquez un code aéroport de 3 lettres (ex. CDG, DSS).");
+    if (destinationCodes.length === 0)
+      problems.push("Destinations : indiquez au moins un code aéroport de 3 lettres (ex. DSS, LIS).");
+    if (roundTrip && (!Number.isInteger(stayDays) || stayDays < 1 || stayDays > 60))
+      problems.push("Durée du séjour : un nombre de jours entre 1 et 60.");
+    if (!from || !to || to < from) problems.push("Dates : la seconde date doit être après la première.");
+    if (maxPrice.trim() && !(Number(maxPrice) > 0)) problems.push("Prix max : un nombre positif.");
+    if (problems.length > 0 || !originCode) {
+      setError(problems.join(" "));
+      return;
+    }
     const watch: NewPriceWatch = {
-      name: name.trim() || `${origin.toUpperCase()} → ${destinations.toUpperCase()}`,
-      origin: origin.trim().toUpperCase(),
-      destinations: codes(destinations),
+      name: name.trim() || `${originCode} → ${destinationCodes.join(", ")}`,
+      origin: originCode,
+      destinations: destinationCodes,
       depart_from: from,
       depart_to: to,
-      trip_length_days: roundTrip ? Number(stay) : null,
-      passengers: Number(pax),
+      trip_length_days: roundTrip ? stayDays : null,
+      passengers: paxCount,
       cabin,
       max_total_price: maxPrice.trim() ? Number(maxPrice) : null,
       airlines: codes(airlines),
@@ -70,7 +89,7 @@ export function AddWatchForm({ onAdded }: { onAdded: () => void }) {
           Destinations (codes séparés par des virgules)
           <input
             value={destinations}
-            placeholder="LIS, BCN, FCO"
+            placeholder="DSS ou LIS, BCN, FCO"
             onChange={(e) => { setDestinations(e.target.value); }}
           />
         </label>
